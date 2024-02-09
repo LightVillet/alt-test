@@ -14,11 +14,11 @@ import              Control.Applicative (liftA3)
 type Branch = String
 
 type PackageName = String
+type PackageEpoch = Integer
 type PackageVersion = String
 type PackageRelease = String
-type PackageEpoch = Integer
--- VRE is for version-release-epoch triplet
-type PackageVRE = (PackageVersion, PackageRelease, PackageEpoch)
+-- EVR is for epoch-version-release triplet
+type PackageVRE = (PackageEpoch, PackageVersion, PackageRelease)
 type PackageTuple = (PackageName, PackageVRE)
 type PackagesMap = Map.Map PackageName PackageVRE
 
@@ -65,12 +65,12 @@ getBranchInfo branch = do
 data BranchDiff = BranchDiff {
     extraPackages   :: [PackageTuple],
     missingPackages :: [PackageTuple],
-    -- Newer VRE and older
+    -- Newer EVR and older
     newerPackages   :: [(PackageName, (PackageVRE, PackageVRE))]
 } deriving (Show)
 
 getPackagePair :: PackageInfo -> PackageTuple
-getPackagePair p = (name p, (version p, release p, epoch p))
+getPackagePair p = (name p, (epoch p, version p, release p))
 
 branchInfoToMap :: BranchInfo -> PackagesMap
 branchInfoToMap = Map.fromList . fmap getPackagePair . packages
