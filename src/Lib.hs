@@ -18,9 +18,9 @@ type PackageEpoch = Integer
 type PackageVersion = String
 type PackageRelease = String
 -- EVR is for epoch-version-release triplet
-type PackageVRE = (PackageEpoch, PackageVersion, PackageRelease)
-type PackageTuple = (PackageName, PackageVRE)
-type PackagesMap = Map.Map PackageName PackageVRE
+type PackageEVR = (PackageEpoch, PackageVersion, PackageRelease)
+type PackageTuple = (PackageName, PackageEVR)
+type PackagesMap = Map.Map PackageName PackageEVR
 
 data BranchInfo = BranchInfo {
     len         :: Integer,
@@ -66,7 +66,7 @@ data BranchDiff = BranchDiff {
     extraPackages   :: [PackageTuple],
     missingPackages :: [PackageTuple],
     -- Newer EVR and older
-    newerPackages   :: [(PackageName, (PackageVRE, PackageVRE))]
+    newerPackages   :: [(PackageName, (PackageEVR, PackageEVR))]
 } deriving (Show)
 
 getPackagePair :: PackageInfo -> PackageTuple
