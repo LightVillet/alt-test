@@ -9,6 +9,7 @@ import              Data.Aeson
 import              Network.HTTP.Simple
 import              Control.Monad (mzero)
 import              Control.Applicative (liftA3)
+import              EVRComparison (compareEVR)
 
 
 type Branch = String
@@ -86,7 +87,6 @@ compareBranches fstBranch sndBranch = do
     let packagesSnd = fmap branchInfoToMap bInfoSnd
     let extra = mapADiffToList packagesFst packagesSnd
     let missing = mapADiffToList packagesSnd packagesFst
-    let inter = liftA2 (Map.intersectionWith (,)) packagesFst packagesSnd
-    -- Not actually a newer from now, waiting for rework comparison to rpmvercmp
-    let newer = fmap Map.toList inter
+    let inter = Map.toList <$> liftA2 (Map.intersectionWith (,)) packagesFst packagesSnd
+    let newer = fmap (filter ((==GT) . uncurry compareEVR . snd)) inter
     return $ liftA3 BranchDiff extra missing newer

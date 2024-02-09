@@ -20,6 +20,7 @@ source-repository head
 
 library
   exposed-modules:
+      EVRComparison
       Lib
   other-modules:
       Paths_alt_test
