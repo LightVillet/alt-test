@@ -16,25 +16,11 @@ type Branch = String
 type PackageName = String
 type PackageVersion = String
 type PackageRelease = String
-type PackageVersionRelease = (PackageVersion, PackageRelease)
-type PackageTuple = (PackageName, PackageVersionRelease)
-type PackagesMap = Map.Map PackageName PackageVersionRelease
-
-wordsWhen     :: (Char -> Bool) -> String -> [String]
-wordsWhen p s =  case dropWhile p s of
-                      "" -> []
-                      s' -> w : wordsWhen p s''
-                            where (w, s'') = break p s'
-
-
--- TODO: fix read for alpha symbols
-versionReleaseToInts :: PackageVersionRelease -> [Integer]
-versionReleaseToInts (v, _) = map read $ wordsWhen (=='.') v :: [Integer]
-
-
--- TODO: do as /lib/rpmvercmp.c
-isNewer :: (PackageVersionRelease, PackageVersionRelease) -> Bool
-isNewer (pv1, pv2) = versionReleaseToInts pv1 < versionReleaseToInts pv2
+type PackageEpoch = Integer
+-- VRE is for version-release-epoch triplet
+type PackageVRE = (PackageVersion, PackageRelease, PackageEpoch)
+type PackageTuple = (PackageName, PackageVRE)
+type PackagesMap = Map.Map PackageName PackageVRE
 
 data BranchInfo = BranchInfo {
     len         :: Integer,
@@ -79,11 +65,12 @@ getBranchInfo branch = do
 data BranchDiff = BranchDiff {
     extraPackages   :: [PackageTuple],
     missingPackages :: [PackageTuple],
-    newerPackages   :: [PackageTuple]
+    -- Newer VRE and older
+    newerPackages   :: [(PackageName, (PackageVRE, PackageVRE))]
 } deriving (Show)
 
 getPackagePair :: PackageInfo -> PackageTuple
-getPackagePair p = (name p, (version p, release p))
+getPackagePair p = (name p, (version p, release p, epoch p))
 
 branchInfoToMap :: BranchInfo -> PackagesMap
 branchInfoToMap = Map.fromList . fmap getPackagePair . packages
@@ -100,5 +87,6 @@ compareBranches fstBranch sndBranch = do
     let extra = mapADiffToList packagesFst packagesSnd
     let missing = mapADiffToList packagesSnd packagesFst
     let inter = liftA2 (Map.intersectionWith (,)) packagesFst packagesSnd
-    let newer = fmap (Map.toList . fmap fst . Map.filter isNewer) inter
+    -- Not actually a newer from now, waiting for rework comparison to rpmvercmp
+    let newer = fmap Map.toList inter
     return $ liftA3 BranchDiff extra missing newer
