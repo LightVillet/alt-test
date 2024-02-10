@@ -33,8 +33,8 @@ library:
   source-dirs: src
   dependencies:
   - aeson
-  - http-conduit
   - containers
+  - http-client
   - http-client-tls
 
 executables:
