@@ -47,7 +47,6 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - alt-test
-    - http-conduit
 
 tests:
   alt-test-test:

@@ -10,10 +10,11 @@ module EVRComparison (compareEVR) where
 import Data.Char
 import Text.Read (readMaybe)
 
+type Epoch = Integer
 type Label = String
-type EVR = (Integer, Label, Label)
+type EVR = (Epoch, Label, Label)
 
-split :: String -> [String]
+split :: Label -> [String]
 split [] = []
 split a@(x:_)
     | isAlpha x     = takeWhile isAlpha a : split (dropWhile isAlpha a)

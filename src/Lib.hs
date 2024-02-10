@@ -88,5 +88,5 @@ compareBranches fstBranch sndBranch = do
     let extra = mapADiffToList packagesFst packagesSnd
     let missing = mapADiffToList packagesSnd packagesFst
     let inter = Map.toList <$> liftA2 (Map.intersectionWith (,)) packagesFst packagesSnd
-    let newer = fmap (filter ((==GT) . uncurry compareEVR . snd)) inter
+    let newer = fmap (filter $ (==GT) . uncurry compareEVR . snd) inter
     return $ liftA3 BranchDiff extra missing newer
