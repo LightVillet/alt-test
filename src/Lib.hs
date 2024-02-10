@@ -17,6 +17,7 @@ type PackageVersion = String
 type PackageRelease = String
 -- EVR is for epoch-version-release triplet
 type PackageEVR = (PackageEpoch, PackageVersion, PackageRelease)
+type PackageMap = Map.Map PackageName PackageEVR
 
 data ArchDiff = ArchDiff {
     extraPackages   :: [(PackageName, PackageEVR)],
@@ -29,19 +30,19 @@ data ArchDiff = ArchDiff {
 packageInfoToPair :: Net.PackageInfo -> (PackageName, PackageEVR)
 packageInfoToPair p = (Net.name p, (Net.epoch p, Net.version p, Net.release p))
 
-branchInfoToMap :: Net.BranchInfo -> Map.Map PackageArch (Map.Map PackageName PackageEVR)
+branchInfoToMap :: Net.BranchInfo -> Map.Map PackageArch PackageMap
 branchInfoToMap bi = Map.map Map.fromList archMap
     where archMap = Map.fromListWith (++) $ map (\p -> (Net.arch p, [packageInfoToPair p])) $ Net.packages bi
 
 
-compareArches :: Map.Map PackageName PackageEVR -> Map.Map PackageName PackageEVR -> ArchDiff
+compareArches :: PackageMap -> PackageMap -> ArchDiff
 compareArches m1 m2 = ArchDiff { extraPackages=extra, missingPackages=missing, newerPackages=newer }
     where   extra   = Map.toList $ Map.difference m1 m2
             missing = Map.toList $ Map.difference m2 m1
             inter   = Map.toList $ Map.intersectionWith (,) m1 m2
             newer   = (filter $ (==GT) . uncurry EVR.compareEVR . snd) inter
 
-newArchToArchDiff :: Map.Map PackageName PackageEVR -> ArchDiff
+newArchToArchDiff :: PackageMap -> ArchDiff
 newArchToArchDiff m = ArchDiff { extraPackages=Map.toList m, missingPackages=[], newerPackages=[]}
 
 compareBranches :: Branch -> Branch -> IO (Maybe (Map.Map PackageArch ArchDiff))
