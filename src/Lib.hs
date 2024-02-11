@@ -3,6 +3,7 @@
 module Lib (compareBranches) where
 
 import qualified GHC.Generics as Generics
+import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Aeson as Aeson
 import qualified Data.Map as Map
 import qualified Data.Map.Merge.Strict as Map.Merge
@@ -64,7 +65,7 @@ compareArches l1 l2 = ArchDiff { extraPackages=extra, missingPackages=missing, n
 newArchToArchDiff :: [Package] -> ArchDiff
 newArchToArchDiff m = ArchDiff { extraPackages=m, missingPackages=[], newerPackages=[]}
 
-compareBranches :: Branch -> Branch -> IO (Either String (Map.Map PackageArch ArchDiff))
+compareBranches :: Branch -> Branch -> IO String
 compareBranches fstBranch sndBranch = do
     bInfoFst <- Net.getBranchInfo fstBranch
     bInfoSnd <- Net.getBranchInfo sndBranch
@@ -74,4 +75,6 @@ compareBranches fstBranch sndBranch = do
     let missingArch = Map.Merge.mapMissing $ const newArchToArchDiff
     let sameArch = Map.Merge.zipWithMatched $ const compareArches
     let diff = liftA2 (Map.Merge.merge extraArch missingArch sameArch) m1 m2
-    return diff
+    case diff of
+        Left err    -> return err
+        Right ans   -> return $ L.unpack $ Aeson.encode ans

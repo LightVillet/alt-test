@@ -31,6 +31,7 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , bytestring
     , containers
     , http-client
     , http-client-tls
@@ -44,10 +45,8 @@ executable alt-test-exe
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
-    , alt-test
+      alt-test
     , base >=4.7 && <5
-    , bytestring
   default-language: Haskell2010
 
 test-suite alt-test-test

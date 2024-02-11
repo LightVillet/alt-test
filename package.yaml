@@ -36,6 +36,7 @@ library:
   - containers
   - http-client
   - http-client-tls
+  - bytestring
 
 executables:
   alt-test-exe:
@@ -47,8 +48,6 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - alt-test
-    - aeson
-    - bytestring
 
 tests:
   alt-test-test:
