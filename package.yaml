@@ -47,6 +47,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - alt-test
+    - aeson
 
 tests:
   alt-test-test:

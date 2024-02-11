@@ -2,8 +2,6 @@
 -- Because of JSON parsing
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
--- TODO: error handling
-
 module Net (getBranchInfo, BranchInfo(..), PackageInfo(..)) where
 -- Since AltLinux doesn't have http-conduit package, I should parse JSON by hand
 
@@ -11,7 +9,7 @@ import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Data.Aeson
 import Control.Monad (mzero)
-
+import Control.Exception (try)
 
 data BranchInfo = BranchInfo {
     len         :: Integer,
@@ -46,10 +44,13 @@ instance FromJSON PackageInfo where
     parseJSON _                 = mzero
 
 -- Get data from API
-getBranchInfo :: String -> IO (Maybe BranchInfo)
+getBranchInfo :: String -> IO (Either String BranchInfo)
 getBranchInfo branch = do
     manager <- newManager tlsManagerSettings
     request <- parseRequest $ "https://rdb.altlinux.org/api/export/branch_binary_packages/" ++ branch
-    response <- httpLbs request manager
-    let body = responseBody response
-    return $ decode body
+    responseTry <- try $ httpLbs request manager
+    let response = case responseTry of
+            Left e      -> Left $ show (e :: HttpException)
+            Right res   -> Right res
+    let body = responseBody <$> response
+    return $ eitherDecode =<< body

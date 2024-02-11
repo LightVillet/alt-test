@@ -1,56 +1,75 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Lib (compareBranches) where
 
--- TODO: error handling
-
-import qualified    Data.Map.Strict as Map
-import qualified    Data.Map.Merge.Strict as Map.Merge
-import qualified    EVRComparison as EVR
-import qualified    Net (getBranchInfo, PackageInfo(..), BranchInfo(..))
+import qualified GHC.Generics as Generics
+import qualified Data.Aeson as Aeson
+import qualified Data.Map as Map
+import qualified Data.Map.Merge.Strict as Map.Merge
+import qualified EVRComparison as EVR
+import qualified Net (getBranchInfo, PackageInfo(..), BranchInfo(..))
 
 
 type Branch = String
 
-type PackageName = String
-type PackageArch = String
-type PackageEpoch = Integer
+type PackageName    = String
+type PackageArch    = String
+type PackageEpoch   = Integer
 type PackageVersion = String
 type PackageRelease = String
--- EVR is for epoch-version-release triplet
-type PackageEVR = (PackageEpoch, PackageVersion, PackageRelease)
-type PackageMap = Map.Map PackageName PackageEVR
+type PackageEVR     = (PackageEpoch, PackageVersion, PackageRelease)
+
+data Package = Package {
+    name    :: PackageName,
+    epoch   :: PackageEpoch,
+    version :: PackageVersion,
+    release :: PackageRelease
+} deriving (Generics.Generic, Show)
 
 data ArchDiff = ArchDiff {
-    extraPackages   :: [(PackageName, PackageEVR)],
-    missingPackages :: [(PackageName, PackageEVR)],
-    -- Newer EVR and older
-    newerPackages   :: [(PackageName, (PackageEVR, PackageEVR))]
-} deriving (Show)
+    extraPackages   :: [Package],
+    missingPackages :: [Package],
+    newerPackages   :: [Package]
+} deriving (Generics.Generic, Show)
+
+instance Aeson.ToJSON Package where
+    toEncoding = Aeson.genericToEncoding Aeson.defaultOptions
+
+instance Aeson.ToJSON ArchDiff where
+    toEncoding = Aeson.genericToEncoding Aeson.defaultOptions
 
 
-packageInfoToPair :: Net.PackageInfo -> (PackageName, PackageEVR)
-packageInfoToPair p = (Net.name p, (Net.epoch p, Net.version p, Net.release p))
+packageInfoToPackage :: Net.PackageInfo -> Package
+packageInfoToPackage p = Package { name=Net.name p, epoch=Net.epoch p, version=Net.version p,release= Net.release p }
 
-branchInfoToMap :: Net.BranchInfo -> Map.Map PackageArch PackageMap
-branchInfoToMap bi = Map.map Map.fromList archMap
-    where archMap = Map.fromListWith (++) $ map (\p -> (Net.arch p, [packageInfoToPair p])) $ Net.packages bi
+branchInfoToMap :: Net.BranchInfo -> Map.Map PackageArch [Package]
+branchInfoToMap bi = Map.fromListWith (++) $ map (\p -> (Net.arch p, [packageInfoToPackage p])) $ Net.packages bi
+
+tupleToPackage :: (PackageName, PackageEVR) -> Package
+tupleToPackage (n, (e, v, r)) = Package { name=n, epoch=e, version=v, release=r }
+
+packageToTuple :: Package -> (PackageName, PackageEVR)
+packageToTuple p = (name p, (epoch p, version p, release p))
+
+compareArches :: [Package] -> [Package] -> ArchDiff
+compareArches l1 l2 = ArchDiff { extraPackages=extra, missingPackages=missing, newerPackages=newer }
+    where   m1 = Map.fromList $ packageToTuple <$> l1
+            m2 = Map.fromList $ packageToTuple <$> l2
+            extra   = map tupleToPackage $ Map.toList $ Map.difference m1 m2
+            missing = map tupleToPackage $ Map.toList $ Map.difference m2 m1
+            inter   = Map.intersectionWith (,) m1 m2 
+            newer   = map tupleToPackage $ Map.toList $ Map.map snd $ Map.filter ((==GT) . uncurry EVR.compareEVR) inter
 
 
-compareArches :: PackageMap -> PackageMap -> ArchDiff
-compareArches m1 m2 = ArchDiff { extraPackages=extra, missingPackages=missing, newerPackages=newer }
-    where   extra   = Map.toList $ Map.difference m1 m2
-            missing = Map.toList $ Map.difference m2 m1
-            inter   = Map.toList $ Map.intersectionWith (,) m1 m2
-            newer   = (filter $ (==GT) . uncurry EVR.compareEVR . snd) inter
+newArchToArchDiff :: [Package] -> ArchDiff
+newArchToArchDiff m = ArchDiff { extraPackages=m, missingPackages=[], newerPackages=[]}
 
-newArchToArchDiff :: PackageMap -> ArchDiff
-newArchToArchDiff m = ArchDiff { extraPackages=Map.toList m, missingPackages=[], newerPackages=[]}
-
-compareBranches :: Branch -> Branch -> IO (Maybe (Map.Map PackageArch ArchDiff))
+compareBranches :: Branch -> Branch -> IO (Either String (Map.Map PackageArch ArchDiff))
 compareBranches fstBranch sndBranch = do
     bInfoFst <- Net.getBranchInfo fstBranch
     bInfoSnd <- Net.getBranchInfo sndBranch
-    let m1 = fmap branchInfoToMap bInfoFst
-    let m2 = fmap branchInfoToMap bInfoSnd
+    let m1 = branchInfoToMap <$> bInfoFst
+    let m2 = branchInfoToMap <$> bInfoSnd
     let extraArch = Map.Merge.mapMissing $ const newArchToArchDiff
     let missingArch = Map.Merge.mapMissing $ const newArchToArchDiff
     let sameArch = Map.Merge.zipWithMatched $ const compareArches
