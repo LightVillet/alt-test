@@ -48,6 +48,7 @@ executables:
     dependencies:
     - alt-test
     - aeson
+    - bytestring
 
 tests:
   alt-test-test:
