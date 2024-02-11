@@ -9,6 +9,7 @@ import qualified Data.Map as Map
 import qualified Data.Map.Merge.Strict as Map.Merge
 import qualified EVRComparison as EVR
 import qualified Net (getBranchInfo, PackageInfo(..), BranchInfo(..))
+import qualified Control.Applicative as A
 
 
 type Branch = String
@@ -74,7 +75,7 @@ compareBranches fstBranch sndBranch = do
     let extraArch = Map.Merge.mapMissing $ const newArchToArchDiff
     let missingArch = Map.Merge.mapMissing $ const newArchToArchDiff
     let sameArch = Map.Merge.zipWithMatched $ const compareArches
-    let diff = liftA2 (Map.Merge.merge extraArch missingArch sameArch) m1 m2
+    let diff = A.liftA2 (Map.Merge.merge extraArch missingArch sameArch) m1 m2
     case diff of
         Left err    -> return err
         Right ans   -> return $ L.unpack $ Aeson.encode ans
