@@ -44,3 +44,17 @@ To compile and successfully link an example from `example/main.c`, you need to a
 ```
 gcc example/main.c -L$GHC_LIBDIR/rts/ -L$GHC_LIBDIR/alt-test-0.1.0.0/ -lHSrts-ghc8.6.4 -lHSalt-test-0.1.0.0-ghc8.6.4 -I$GHC_LIBDIR/include
 ```
+
+## Troubleshooting
+
+If you have a runtime error `certificate has unknown CA`, you should change TLS validation:
+```
+apt-get install ca-trust
+mkdir /etc/ssl && ln -s /etc/pki/tls/certs /etc/ssl/certs
+
+```
+
+If you are seeing a lot of errors during `ghc` and your terminal's symbols start looking weird, you should install locales:
+```
+apt-get install locales
+```
