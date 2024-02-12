@@ -33,9 +33,14 @@ ghc -O2 -shared -dynamic -fPIC -o $GHC_LIBDIR/alt-test-0.1.0.0/libHSalt-test-0.1
 ln -s $GHC_LIBDIR/alt-test-0.1.0.0/libHSalt-test-0.1.0.0-ghc8.6.4.so $GHC_LIBDIR/lib/libHSalt-test-0.1.0.0-ghc8.6.4.so
 ```
 
+* Update ldconfig cache:
+```
+ldcondig
+```
+
 ## Example
 
 To compile and successfully link an example from `example/main.c`, you need to add two libraries and a header (for `hs_init` and `hs_exit` – `HSrts-ghc8.6.4`, for `compairingBranches` - `HSalt-test-0.1.0.0-ghc8.6.4`, for `HHsFFI.h` - `$GHC_LIBDIR/include/`) to linker:
 ```
-gcc example/main.c -L$GHC_LIBDIR/rts/ -L$GHC_LIBDIR/alt-test-0.1.0.0/ -lHSrts-ghc8.6.4 -lHSalt-test-0.1.0.0-ghc8.6.4
+gcc example/main.c -L$GHC_LIBDIR/rts/ -L$GHC_LIBDIR/alt-test-0.1.0.0/ -lHSrts-ghc8.6.4 -lHSalt-test-0.1.0.0-ghc8.6.4 -I$GHC_LIBDIR/include
 ```
