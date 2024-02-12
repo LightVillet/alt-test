@@ -58,3 +58,5 @@ If you are seeing a lot of errors during `ghc` and your terminal's symbols start
 ```
 apt-get install locales
 ```
+
+If you have any other problems, I open to issues and pull requests
