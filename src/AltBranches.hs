@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Lib (compareBranches) where
+module AltBranches (compareBranches) where
 
 import qualified GHC.Generics as Generics
 import qualified Data.ByteString.Lazy.Char8 as L
@@ -10,9 +10,8 @@ import qualified Data.Map.Merge.Strict as Map.Merge
 import qualified EVRComparison as EVR
 import qualified Net (getBranchInfo, PackageInfo(..), BranchInfo(..))
 import qualified Control.Applicative as A
+import Foreign.C.String
 
-
-type Branch = String
 
 type PackageName    = String
 type PackageArch    = String
@@ -66,8 +65,13 @@ compareArches l1 l2 = ArchDiff { extraPackages=extra, missingPackages=missing, n
 newArchToArchDiff :: [Package] -> ArchDiff
 newArchToArchDiff m = ArchDiff { extraPackages=m, missingPackages=[], newerPackages=[]}
 
-compareBranches :: Branch -> Branch -> IO String
-compareBranches fstBranch sndBranch = do
+-- For shared library
+foreign export ccall compareBranches :: CString -> CString -> IO CString
+
+compareBranches :: CString -> CString -> IO CString
+compareBranches fstBranchC sndBranchC = do
+    fstBranch <- peekCString fstBranchC
+    sndBranch <- peekCString sndBranchC
     bInfoFst <- Net.getBranchInfo fstBranch
     bInfoSnd <- Net.getBranchInfo sndBranch
     let m1 = branchInfoToMap <$> bInfoFst
@@ -77,5 +81,5 @@ compareBranches fstBranch sndBranch = do
     let sameArch = Map.Merge.zipWithMatched $ const compareArches
     let diff = A.liftA2 (Map.Merge.merge extraArch missingArch sameArch) m1 m2
     case diff of
-        Left err    -> return err
-        Right ans   -> return $ L.unpack $ Aeson.encode ans
+        Left err    -> newCString err
+        Right ans   -> newCString $ L.unpack $ Aeson.encode ans

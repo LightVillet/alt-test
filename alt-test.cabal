@@ -20,8 +20,8 @@ source-repository head
 
 library
   exposed-modules:
+      AltBranches
       EVRComparison
-      Lib
       Net
   other-modules:
       Paths_alt_test
@@ -35,18 +35,6 @@ library
     , containers
     , http-client
     , http-client-tls
-  default-language: Haskell2010
-
-executable alt-test-exe
-  main-is: Main.hs
-  other-modules:
-      Paths_alt_test
-  hs-source-dirs:
-      app
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      alt-test
-    , base >=4.7 && <5
   default-language: Haskell2010
 
 test-suite alt-test-test
