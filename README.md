@@ -30,7 +30,7 @@ ghc -O2 -shared -dynamic -fPIC -o $GHC_LIBDIR/alt-test-0.1.0.0/libHSalt-test-0.1
 ```
 * make symbolic link for shared library:
 ```
-ln -s $GHC_LIBDIR/alt-test-0.1.0.0/libHSalt-test-0.1.0.0-ghc8.6.4.so $GHC_LIBDIR/lib/llibHSalt-test-0.1.0.0-ghc8.6.4.so
+ln -s $GHC_LIBDIR/alt-test-0.1.0.0/libHSalt-test-0.1.0.0-ghc8.6.4.so $GHC_LIBDIR/lib/libHSalt-test-0.1.0.0-ghc8.6.4.so
 ```
 
 ## Example
