@@ -28,6 +28,9 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
+- -shared
+- -dynamic
+- -fPIC
 
 library:
   source-dirs: src

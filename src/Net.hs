@@ -10,8 +10,6 @@ import Network.HTTP.Client.TLS
 import Data.Aeson
 import Control.Monad (mzero)
 import Control.Exception (try)
-import Network.Connection
-import Network.TLS
 
 data BranchInfo = BranchInfo {
     len         :: Integer,
@@ -48,8 +46,7 @@ instance FromJSON PackageInfo where
 -- Get data from API
 getBranchInfo :: String -> IO (Either String BranchInfo)
 getBranchInfo branch = do
-    let settings = mkManagerSettings (TLSSettingsSimple True False False) Nothing
-    manager <- newManager settings
+    manager <- newManager tlsManagerSettings
     request <- parseRequest $ "https://rdb.altlinux.org/api/export/branch_binary_packages/" ++ branch
     responseTry <- try $ httpLbs request manager
     let response = case responseTry of
