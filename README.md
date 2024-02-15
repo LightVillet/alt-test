@@ -1,7 +1,7 @@
 # alt-test
 
 ## Description
-Library exports function `void* compareBranches(char* a1, char* a2)` that returns pointer to string, containing JSON reslut of compairing two branches.
+Library exports function `void* compareBranches(char* a1, char* a2)` that returns pointer to string, containing JSON reslut of compairing two branches or an error.
 
 ## Dependencies
 * zlib-devel
